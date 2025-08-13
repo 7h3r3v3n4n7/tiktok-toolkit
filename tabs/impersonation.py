@@ -136,7 +136,7 @@ class ImpersonationTab(QWidget):
         # Analysis buttons
         buttons_layout = QHBoxLayout()
         
-        self.scan_usernames_button = QPushButton("🔍 Scan for Similar Usernames")
+        self.scan_usernames_button = QPushButton("Scan for Similar Usernames")
         self.scan_usernames_button.setStyleSheet("""
             QPushButton {
                 background-color: #FF5722;
@@ -157,7 +157,7 @@ class ImpersonationTab(QWidget):
         self.scan_usernames_button.clicked.connect(self.scan_similar_usernames)
         buttons_layout.addWidget(self.scan_usernames_button)
         
-        self.scan_content_button = QPushButton("🎬 Scan for Content Clones")
+        self.scan_content_button = QPushButton("Scan for Content Clones")
         self.scan_content_button.setStyleSheet("""
             QPushButton {
                 background-color: #9C27B0;
@@ -178,7 +178,7 @@ class ImpersonationTab(QWidget):
         self.scan_content_button.clicked.connect(self.scan_content_clones)
         buttons_layout.addWidget(self.scan_content_button)
         
-        self.full_scan_button = QPushButton("🛡️ Full Impersonation Scan")
+        self.full_scan_button = QPushButton("Full Impersonation Scan")
         self.full_scan_button.setStyleSheet("""
             QPushButton {
                 background-color: #F44336;
@@ -200,7 +200,7 @@ class ImpersonationTab(QWidget):
         buttons_layout.addWidget(self.full_scan_button)
         
         # Add candidate loading button
-        self.load_candidates_button = QPushButton("📁 Load Candidate Handles")
+        self.load_candidates_button = QPushButton("Load Candidate Handles")
         self.load_candidates_button.setStyleSheet("""
             QPushButton {
                 background-color: #607D8B;
@@ -230,7 +230,7 @@ class ImpersonationTab(QWidget):
         self.candidate_input.setMaximumHeight(80)
         paste_row.addWidget(self.candidate_input)
 
-        self.seed_from_content_btn = QPushButton("🌱 Seed From Your Content")
+        self.seed_from_content_btn = QPushButton("Seed From Your Content")
         self.seed_from_content_btn.setToolTip("Scan your video titles/descriptions for @mentions and add them as candidates")
         self.seed_from_content_btn.clicked.connect(self.seed_candidates_from_content)
         paste_row.addWidget(self.seed_from_content_btn)
@@ -298,7 +298,7 @@ class ImpersonationTab(QWidget):
             self.recommendations_display.clear()
             self.suspects_table.setRowCount(0)
             
-            self.impersonation_results.append("🔍 Scanning for similar usernames...")
+            self.impersonation_results.append("Scanning for similar usernames...")
             
             # Get user's current username
             headers = {
@@ -316,7 +316,7 @@ class ImpersonationTab(QWidget):
                 display_name = user.get('display_name', '')
                 
                 if display_name:
-                    self.impersonation_results.append(f"📝 Analyzing username: {display_name}")
+                    self.impersonation_results.append(f"Analyzing username: {display_name}")
                     
                     # Load candidate handles for analysis
                     candidates = self.load_candidate_handles()
@@ -329,31 +329,31 @@ class ImpersonationTab(QWidget):
                         candidates = self.make_candidate_dicts(variations)
                     
                     if candidates:
-                        self.impersonation_results.append(f"🔍 Analyzing {len(candidates)} candidate accounts for impersonation...")
+                        self.impersonation_results.append(f"Analyzing {len(candidates)} candidate accounts for impersonation...")
                         
                         # Use real algorithms to rank candidates
                         similar_accounts = self.rank_impersonation_candidates(user, candidates)
                         
                         if similar_accounts:
                             self.populate_suspects_table(similar_accounts)
-                            self.impersonation_results.append(f"🚨 Found {len(similar_accounts)} potential impersonation accounts")
+                            self.impersonation_results.append(f"Found {len(similar_accounts)} potential impersonation accounts")
                             
                             # Generate recommendations
                             self.generate_impersonation_recommendations(similar_accounts)
                         else:
-                            self.impersonation_results.append("✅ No obvious username impersonations detected")
+                            self.impersonation_results.append("No obvious username impersonations detected")
                             self.risk_level_label.setText("LOW RISK")
                             self.risk_level_label.setStyleSheet("font-size: 18px; font-weight: bold; color: #4CAF50;")
                     else:
-                        self.impersonation_results.append("ℹ️ No candidates found. Try pasting handles or using 'Seed From Your Content'.")
+                        self.impersonation_results.append("No candidates found. Try pasting handles or using 'Seed From Your Content'.")
                         
                 else:
-                    self.impersonation_results.append("❌ Could not retrieve user display name")
+                    self.impersonation_results.append("Could not retrieve user display name")
             else:
-                self.impersonation_results.append(f"❌ Error fetching user data: {user_response.status_code}")
+                self.impersonation_results.append(f"Error fetching user data: {user_response.status_code}")
                 
         except Exception as e:
-            self.impersonation_results.append(f"❌ Error during username scan: {e}")
+            self.impersonation_results.append(f"Error during username scan: {e}")
         finally:
             # Hide loading spinner and re-enable button
             self.loading_spinner.hide_loading()
@@ -375,7 +375,7 @@ class ImpersonationTab(QWidget):
             self.recommendations_display.clear()
             self.suspects_table.setRowCount(0)
             
-            self.impersonation_results.append("🎬 Scanning for content clones...")
+            self.impersonation_results.append("Scanning for content clones...")
             
             # Get user's videos
             headers = {
@@ -391,7 +391,7 @@ class ImpersonationTab(QWidget):
             
             while has_more and page_count < 3:  # Limit to 3 pages for performance
                 page_count += 1
-                self.impersonation_results.append(f"📄 Fetching video page {page_count}...")
+                self.impersonation_results.append(f"Fetching video page {page_count}...")
                 
                 request_body = {
                     'max_count': 20,
@@ -410,36 +410,36 @@ class ImpersonationTab(QWidget):
                     cursor = data.get('cursor', 0)
                     has_more = data.get('has_more', False)
                     
-                    self.impersonation_results.append(f"✅ Page {page_count}: Retrieved {len(videos)} videos (Total: {len(all_videos)})")
+                    self.impersonation_results.append(f"Page {page_count}: Retrieved {len(videos)} videos (Total: {len(all_videos)})")
                     
                     # Small delay to be respectful to the API
                     import time
                     time.sleep(0.5)
                 else:
-                    self.impersonation_results.append(f"❌ Error on page {page_count}: {video_response.status_code}")
+                    self.impersonation_results.append(f"Error on page {page_count}: {video_response.status_code}")
                     break
             
             if all_videos:
-                self.impersonation_results.append(f"📊 Analyzing {len(all_videos)} videos for potential clones")
+                self.impersonation_results.append(f"Analyzing {len(all_videos)} videos for potential clones")
                 
                 # Simulate content clone detection
                 content_clones = self.simulate_content_clone_detection(all_videos)
                 
                 if content_clones:
                     self.populate_suspects_table(content_clones)
-                    self.impersonation_results.append(f"🚨 Found {len(content_clones)} potential content clones")
+                    self.impersonation_results.append(f"Found {len(content_clones)} potential content clones")
                     
                     # Generate recommendations
                     self.generate_content_protection_recommendations(content_clones)
                 else:
-                    self.impersonation_results.append("✅ No obvious content clones detected")
+                    self.impersonation_results.append("No obvious content clones detected")
                     self.risk_level_label.setText("LOW RISK")
                     self.risk_level_label.setStyleSheet("font-size: 18px; font-weight: bold; color: #4CAF50;")
             else:
-                self.impersonation_results.append("❌ No videos found to analyze")
+                self.impersonation_results.append("No videos found to analyze")
                 
         except Exception as e:
-            self.impersonation_results.append(f"❌ Error during content clone scan: {e}")
+            self.impersonation_results.append(f"Error during content clone scan: {e}")
         finally:
             # Hide loading spinner and re-enable button
             self.loading_spinner.hide_loading()
@@ -461,21 +461,21 @@ class ImpersonationTab(QWidget):
             self.recommendations_display.clear()
             self.suspects_table.setRowCount(0)
             
-            self.impersonation_results.append("🛡️ Starting comprehensive impersonation scan...")
-            self.impersonation_results.append("🔍 This will check usernames, content, and profile similarities")
+            self.impersonation_results.append("Starting comprehensive impersonation scan...")
+            self.impersonation_results.append("This will check usernames, content, and profile similarities")
             
             # Run both scans
             self.scan_similar_usernames()
             self.scan_content_clones()
             
             # Additional checks
-            self.impersonation_results.append("🔍 Checking for profile similarities...")
+            self.impersonation_results.append("Checking for profile similarities...")
             self.check_profile_similarities()
             
-            self.impersonation_results.append("✅ Comprehensive scan completed")
+            self.impersonation_results.append("Comprehensive scan completed")
             
         except Exception as e:
-            self.impersonation_results.append(f"❌ Error during full scan: {e}")
+            self.impersonation_results.append(f"Error during full scan: {e}")
         finally:
             # Hide loading spinner and re-enable button
             self.loading_spinner.hide_loading()
@@ -558,9 +558,9 @@ class ImpersonationTab(QWidget):
     
     def check_profile_similarities(self):
         """Check for profile similarities"""
-        self.impersonation_results.append("🔍 Checking bio similarities...")
-        self.impersonation_results.append("🔍 Checking avatar similarities...")
-        self.impersonation_results.append("🔍 Checking follower patterns...")
+        self.impersonation_results.append("Checking bio similarities...")
+        self.impersonation_results.append("Checking avatar similarities...")
+        self.impersonation_results.append("Checking follower patterns...")
     
     def populate_suspects_table(self, suspects):
         """Populate the suspects table with found accounts"""
@@ -592,21 +592,21 @@ class ImpersonationTab(QWidget):
     
     def generate_impersonation_recommendations(self, suspects):
         """Generate recommendations for username impersonation"""
-        self.recommendations_display.append("🛡️ IMPERSONATION PROTECTION RECOMMENDATIONS:")
+        self.recommendations_display.append("IMPERSONATION PROTECTION RECOMMENDATIONS:")
         self.recommendations_display.append("")
-        self.recommendations_display.append("🚨 IMMEDIATE ACTIONS:")
+        self.recommendations_display.append("IMMEDIATE ACTIONS:")
         self.recommendations_display.append("   • Report suspicious accounts to TikTok")
         self.recommendations_display.append("   • Document all impersonation attempts")
         self.recommendations_display.append("   • Consider trademarking your username")
         self.recommendations_display.append("   • Enable two-factor authentication")
         self.recommendations_display.append("")
-        self.recommendations_display.append("🔍 MONITORING STRATEGIES:")
+        self.recommendations_display.append("MONITORING STRATEGIES:")
         self.recommendations_display.append("   • Set up Google Alerts for your username")
         self.recommendations_display.append("   • Regularly search for username variations")
         self.recommendations_display.append("   • Monitor follower growth for suspicious patterns")
         self.recommendations_display.append("   • Check for similar display names")
         self.recommendations_display.append("")
-        self.recommendations_display.append("🛡️ PREVENTION MEASURES:")
+        self.recommendations_display.append("PREVENTION MEASURES:")
         self.recommendations_display.append("   • Use unique, distinctive usernames")
         self.recommendations_display.append("   • Add verification badges where possible")
         self.recommendations_display.append("   • Include your real name in bio for authenticity")
@@ -615,22 +615,22 @@ class ImpersonationTab(QWidget):
     
     def generate_content_protection_recommendations(self, clones):
         """Generate recommendations for content protection"""
-        self.recommendations_display.append("🎬 CONTENT PROTECTION RECOMMENDATIONS:")
+        self.recommendations_display.append("CONTENT PROTECTION RECOMMENDATIONS:")
         self.recommendations_display.append("")
-        self.recommendations_display.append("🚨 IMMEDIATE ACTIONS:")
+        self.recommendations_display.append("IMMEDIATE ACTIONS:")
         self.recommendations_display.append("   • File DMCA takedown requests")
         self.recommendations_display.append("   • Report content theft to TikTok")
         self.recommendations_display.append("   • Document all stolen content")
         self.recommendations_display.append("   • Consider legal action for serious cases")
         self.recommendations_display.append("")
-        self.recommendations_display.append("🔍 CONTENT PROTECTION:")
+        self.recommendations_display.append("CONTENT PROTECTION:")
         self.recommendations_display.append("   • Add watermarks to your videos")
         self.recommendations_display.append("   • Use unique intro/outro sequences")
         self.recommendations_display.append("   • Include your username in video content")
         self.recommendations_display.append("   • Use distinctive editing styles")
         self.recommendations_display.append("   • Consider using content fingerprinting tools")
         self.recommendations_display.append("")
-        self.recommendations_display.append("🛡️ MONITORING TOOLS:")
+        self.recommendations_display.append("MONITORING TOOLS:")
         self.recommendations_display.append("   • Use reverse image search for thumbnails")
         self.recommendations_display.append("   • Monitor video performance for unusual patterns")
         self.recommendations_display.append("   • Set up alerts for similar content")
@@ -744,11 +744,11 @@ class ImpersonationTab(QWidget):
                 current = self.candidate_input.toPlainText().strip()
                 combined = (current + '\n' if current else '') + '\n'.join('@'+h for h in new_handles)
                 self.candidate_input.setPlainText(combined)
-                self.impersonation_results.append(f"🌱 Added {len(new_handles)} handles from your content.")
+                self.impersonation_results.append(f"Added {len(new_handles)} handles from your content.")
             else:
-                self.impersonation_results.append("ℹ️ No new @mentions found in recent content.")
+                self.impersonation_results.append("No new @mentions found in recent content.")
         except Exception as e:
-            self.impersonation_results.append(f"❌ Seeding failed: {e}")
+            self.impersonation_results.append(f"Seeding failed: {e}")
         finally:
             self.loading_spinner.hide_loading()
             self.seed_from_content_btn.setEnabled(True)

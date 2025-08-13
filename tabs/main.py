@@ -51,7 +51,7 @@ class AuthTab(QWidget):
         auth_layout = QVBoxLayout(auth_group)
         
         # Login button
-        self.login_button = QPushButton("🔗 Login with TikTok")
+        self.login_button = QPushButton("Login with TikTok")
         self.login_button.setStyleSheet("""
             QPushButton {
                 background-color: #fe2c55;
@@ -96,11 +96,11 @@ class AuthTab(QWidget):
         # Token actions
         token_actions = QHBoxLayout()
         
-        self.refresh_token_button = QPushButton("🔄 Refresh Token")
+        self.refresh_token_button = QPushButton("Refresh Token")
         self.refresh_token_button.clicked.connect(self.refresh_access_token)
         token_actions.addWidget(self.refresh_token_button)
         
-        self.clear_token_button = QPushButton("🗑️ Clear Token")
+        self.clear_token_button = QPushButton("Clear Token")
         self.clear_token_button.clicked.connect(self.clear_tokens)
         token_actions.addWidget(self.clear_token_button)
         
@@ -151,7 +151,7 @@ class AuthTab(QWidget):
             self.status_label.setText("🌐 Browser opened - complete authentication on TikTok")
             
         except Exception as e:
-            self.status_label.setText(f"❌ Failed to start OAuth flow: {e}")
+            self.status_label.setText(f"Failed to start OAuth flow: {e}")
             self.progress_bar.setVisible(False)
             logger.error("AUTH", "Failed to start OAuth flow", e)
     
@@ -174,14 +174,14 @@ class AuthTab(QWidget):
             
             # Validate callback
             if not self.validate_callback(callback_data):
-                self.status_label.setText("❌ Invalid callback received")
+                self.status_label.setText("Invalid callback received")
                 return
             
             # Exchange code for tokens
             self.exchange_code_for_tokens(callback_data['code'])
             
         except Exception as e:
-            self.status_label.setText(f"❌ Callback handling error: {e}")
+            self.status_label.setText(f"Callback handling error: {e}")
             logger.error("AUTH", "Callback handling error", e)
     
     def validate_callback(self, callback_data):
@@ -231,14 +231,14 @@ class AuthTab(QWidget):
         if 'error' in j:
             msg = f"Token exchange failed ({response.status_code}): {j.get('error')} - {j.get('error_description')} log_id={j.get('log_id')}"
             logger.error("AUTH", msg, Exception(msg))
-            self.status_label.setText(f"❌ {msg}")
+            self.status_label.setText(f"{msg}")
             self.progress_bar.setVisible(False)
             return
 
         if response.status_code != 200 or 'access_token' not in j:
             msg = f"Token exchange unexpected response ({response.status_code}): {response.text[:300]}"
             logger.error("AUTH", msg, Exception(msg))
-            self.status_label.setText(f"❌ {msg}")
+            self.status_label.setText(f"{msg}")
             self.progress_bar.setVisible(False)
             return
 
@@ -248,7 +248,7 @@ class AuthTab(QWidget):
         self.token_expires_in = j.get('expires_in', 86400)
         self.update_token_display()
         self.save_tokens()
-        self.status_label.setText("✅ Authentication successful!")
+        self.status_label.setText("Authentication successful!")
         self.progress_bar.setVisible(False)
         if self.parent:
             self.parent.access_token = self.access_token
@@ -285,11 +285,11 @@ class AuthTab(QWidget):
 
         if 'error' in j:
             msg = f"Token refresh failed ({response.status_code}): {j.get('error')} - {j.get('error_description')} log_id={j.get('log_id')}"
-            self.status_label.setText(f"❌ {msg}")
+            self.status_label.setText(f"{msg}")
             return
 
         if response.status_code != 200 or 'access_token' not in j:
-            self.status_label.setText(f"❌ Token refresh unexpected response ({response.status_code}): {response.text[:300]}")
+            self.status_label.setText(f"Token refresh unexpected response ({response.status_code}): {response.text[:300]}")
             return
 
         self.access_token = j['access_token']
@@ -297,7 +297,7 @@ class AuthTab(QWidget):
         self.token_expires_in = j.get('expires_in', 86400)
         self.update_token_display()
         self.save_tokens()
-        self.status_label.setText("✅ Token refreshed successfully!")
+        self.status_label.setText("Token refreshed successfully!")
         if self.parent:
             self.parent.access_token = self.access_token
             self.parent.refresh_token = self.refresh_token
@@ -309,7 +309,7 @@ class AuthTab(QWidget):
         self.refresh_token = None
         self.token_display.clear()
         self.save_tokens()
-        self.status_label.setText("🗑️ Tokens cleared")
+        self.status_label.setText("Tokens cleared")
         
         # Update parent's tokens
         if self.parent:
@@ -344,7 +344,7 @@ class AuthTab(QWidget):
                 
                 if self.access_token:
                     self.update_token_display()
-                    self.status_label.setText("✅ Loaded saved tokens")
+                    self.status_label.setText("Loaded saved tokens")
                     
                     # Update parent's tokens
                     if self.parent:

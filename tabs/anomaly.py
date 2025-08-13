@@ -65,7 +65,7 @@ class AnomalyTab(QWidget):
         self.detect_bots_button.clicked.connect(self.detect_bots)
         buttons_layout.addWidget(self.detect_bots_button)
         
-        self.engagement_analysis_button = QPushButton("📊 Engagement Analysis")
+        self.engagement_analysis_button = QPushButton("Engagement Analysis")
         self.engagement_analysis_button.setStyleSheet("""
             QPushButton {
                 background-color: #2196F3;
@@ -107,7 +107,7 @@ class AnomalyTab(QWidget):
         self.traffic_analysis_button.clicked.connect(self.analyze_traffic_patterns)
         buttons_layout.addWidget(self.traffic_analysis_button)
         
-        self.full_anomaly_scan_button = QPushButton("🔍 Full Anomaly Scan")
+        self.full_anomaly_scan_button = QPushButton("Full Anomaly Scan")
         self.full_anomaly_scan_button.setStyleSheet("""
             QPushButton {
                 background-color: #9C27B0;
@@ -272,7 +272,7 @@ class AnomalyTab(QWidget):
             while has_more and page_count < 10:  # Limit to 3 pages for performance
                 page_count += 1
                 self.progress_bar.setValue(page_count * 20)
-                self.anomaly_results.append(f"📄 Fetching video page {page_count}...")
+                self.anomaly_results.append(f"Fetching video page {page_count}...")
                 
                 request_body = {
                     'max_count': 20,
@@ -291,7 +291,7 @@ class AnomalyTab(QWidget):
                     cursor = data.get('cursor', 0)
                     has_more = data.get('has_more', False)
                     
-                    self.anomaly_results.append(f"✅ Page {page_count}: Retrieved {len(videos)} videos (Total: {len(all_videos)})")
+                    self.anomaly_results.append(f"Page {page_count}: Retrieved {len(videos)} videos (Total: {len(all_videos)})")
                     
                     # Small delay to be respectful to the API
                     import time

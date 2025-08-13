@@ -63,7 +63,7 @@ class TikTokAuthServer(QThread):
                         <html>
                         <head><title>TikTok Login Success</title></head>
                         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-                            <h1 style="color: #fe2c55;">✅ TikTok Login Successful!</h1>
+                            <h1 style="color: #fe2c55;">TikTok Login Successful!</h1>
                             <p>You can close this window now.</p>
                             <p style="color: #666;">The application will handle the authentication automatically.</p>
                         </body>

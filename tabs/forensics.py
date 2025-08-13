@@ -60,7 +60,7 @@ class ForensicsTab(QWidget):
         self.extract_videos_button.clicked.connect(self.extract_video_metadata)
         controls_layout.addWidget(self.extract_videos_button)
         
-        self.export_forensics_button = QPushButton("📄 Export Forensics Report")
+        self.export_forensics_button = QPushButton("Export Forensics Report")
         self.export_forensics_button.setStyleSheet("""
             QPushButton {
                 background-color: #FF9800;
@@ -135,7 +135,7 @@ class ForensicsTab(QWidget):
             self.insights_display.clear()
             self.video_table.setRowCount(0)
 
-            self.forensics_results.append("🔍 Fetching ALL video metadata...")
+            self.forensics_results.append("Fetching ALL video metadata...")
             self.forensics_results.append("⏳ This may take a while depending on the number of videos...")
 
             headers = {
@@ -153,7 +153,7 @@ class ForensicsTab(QWidget):
 
             while has_more:
                 page_count += 1
-                self.forensics_results.append(f"📄 Fetching page {page_count}...")
+                self.forensics_results.append(f"Fetching page {page_count}...")
                 
                 # Update loading status
                 self.loading_overlay.update_status(f"Fetching page {page_count}... (Total: {len(all_videos)} videos)")
@@ -177,14 +177,14 @@ class ForensicsTab(QWidget):
                     cursor = data.get('cursor', 0)
                     has_more = data.get('has_more', False)
                     
-                    self.forensics_results.append(f"✅ Page {page_count}: Retrieved {len(videos)} videos (Total: {len(all_videos)})")
+                    self.forensics_results.append(f"Page {page_count}: Retrieved {len(videos)} videos (Total: {len(all_videos)})")
                     
                     # Small delay to be respectful to the API
                     import time
                     time.sleep(0.5)
                     
                 else:
-                    self.forensics_results.append(f"❌ Error on page {page_count}: {response.status_code}")
+                    self.forensics_results.append(f"Error on page {page_count}: {response.status_code}")
                     self.forensics_results.append(f"Response: {response.text}")
                     break
 
@@ -193,11 +193,11 @@ class ForensicsTab(QWidget):
                 self.process_video_metadata(all_videos)
                 self.generate_forensic_insights(all_videos)
             else:
-                self.forensics_results.append("ℹ️ No videos found or no videos accessible")
+                self.forensics_results.append("No videos found or no videos accessible")
 
         except Exception as e:
             logger.error("FORENSICS", "Exception during extraction", e)
-            self.forensics_results.append(f"❌ Exception during extraction: {e}")
+            self.forensics_results.append(f"Exception during extraction: {e}")
         finally:
             # Hide loading overlay and re-enable button
             self.loading_overlay.hide_loading()
@@ -208,7 +208,7 @@ class ForensicsTab(QWidget):
         self.video_table.setRowCount(len(videos))
         
         # Add detailed processing info
-        self.forensics_results.append(f"📊 Processing {len(videos)} videos for detailed analysis...")
+        self.forensics_results.append(f"Processing {len(videos)} videos for detailed analysis...")
         
         total_views = 0
         total_likes = 0
@@ -261,7 +261,7 @@ class ForensicsTab(QWidget):
             self.video_table.setItem(row, 7, QTableWidgetItem(f"{share_count:,}"))
         
         # Display comprehensive statistics
-        self.forensics_results.append(f"📊 COMPREHENSIVE ANALYSIS COMPLETE:")
+        self.forensics_results.append(f"COMPREHENSIVE ANALYSIS COMPLETE:")
         self.forensics_results.append(f"   • Total Videos: {len(videos):,}")
         self.forensics_results.append(f"   • Total Views: {total_views:,}")
         self.forensics_results.append(f"   • Total Likes: {total_likes:,}")
@@ -294,31 +294,31 @@ class ForensicsTab(QWidget):
         total_likes = sum(v.get('like_count', 0) for v in videos)
         total_comments = sum(v.get('comment_count', 0) for v in videos)
         
-        insights.append(f"📊 Engagement Summary: {total_views:,} total views, {total_likes:,} likes, {total_comments:,} comments")
+        insights.append(f"Engagement Summary: {total_views:,} total views, {total_likes:,} likes, {total_comments:,} comments")
         
         # Detect anomalies
         if videos:
             avg_views = total_views / len(videos)
             high_engagement_videos = [v for v in videos if v.get('view_count', 0) > avg_views * 2]
             if high_engagement_videos:
-                insights.append(f"🚨 Anomaly: {len(high_engagement_videos)} videos with unusually high engagement (2x above average)")
+                insights.append(f"Anomaly: {len(high_engagement_videos)} videos with unusually high engagement (2x above average)")
         
         # Privacy analysis (privacy level not available in v2 API)
         insights.append(f"🔒 Privacy Analysis: Privacy settings not available in v2 API")
         
         # Content analysis
         videos_with_description = [v for v in videos if v.get('video_description')]
-        insights.append(f"📝 Content: {len(videos_with_description)} videos have descriptions")
+        insights.append(f"Content: {len(videos_with_description)} videos have descriptions")
         
         # Forensic evidence
-        insights.append(f"\n🔍 FORENSIC EVIDENCE:")
+        insights.append(f"\nFORENSIC EVIDENCE:")
         insights.append(f"• Account activity timeline established")
         insights.append(f"• Content creation patterns documented")
         insights.append(f"• Engagement metrics recorded")
         insights.append(f"• Privacy settings audit completed")
         
         # Note about privacy settings
-        insights.append(f"⚠️ Privacy settings analysis not available in v2 API")
+        insights.append(f"Privacy settings analysis not available in v2 API")
         
         # Add to display
         for insight in insights:

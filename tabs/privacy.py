@@ -30,7 +30,7 @@ class PrivacyTab(QWidget):
         self.geolocation_tab = PrivacyGeolocationTab(self)
         
         # Add sub-tabs
-        privacy_tabs.addTab(self.general_tab, "🛡️ General Privacy")
-        privacy_tabs.addTab(self.geolocation_tab, "📍 Geolocation")
+        privacy_tabs.addTab(self.general_tab, "General Privacy")
+        privacy_tabs.addTab(self.geolocation_tab, "Geolocation")
         
         layout.addWidget(privacy_tabs)

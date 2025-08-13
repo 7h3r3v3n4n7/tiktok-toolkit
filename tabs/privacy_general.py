@@ -48,7 +48,7 @@ class PrivacyGeneralTab(QWidget):
         privacy_layout = QVBoxLayout(privacy_group)
         
         # Analysis button
-        self.analyze_privacy_button = QPushButton("🔍 Analyze Privacy & Exposure")
+        self.analyze_privacy_button = QPushButton("Analyze Privacy & Exposure")
         self.analyze_privacy_button.setStyleSheet("""
             QPushButton {
                 background-color: #4CAF50;

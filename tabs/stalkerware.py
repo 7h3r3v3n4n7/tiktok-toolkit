@@ -43,7 +43,7 @@ class StalkerwareTab(QWidget):
         # Analysis buttons
         buttons_layout = QHBoxLayout()
         
-        self.detect_stalkers_button = QPushButton("🕵️ Detect Stalkerware")
+        self.detect_stalkers_button = QPushButton("Detect Stalkerware")
         self.detect_stalkers_button.setStyleSheet("""
             QPushButton {
                 background-color: #E91E63;
@@ -64,7 +64,7 @@ class StalkerwareTab(QWidget):
         self.detect_stalkers_button.clicked.connect(self.detect_stalkerware)
         buttons_layout.addWidget(self.detect_stalkers_button)
         
-        self.analyze_patterns_button = QPushButton("📊 Analyze Patterns")
+        self.analyze_patterns_button = QPushButton("Analyze Patterns")
         self.analyze_patterns_button.setStyleSheet("""
             QPushButton {
                 background-color: #9C27B0;
@@ -85,7 +85,7 @@ class StalkerwareTab(QWidget):
         self.analyze_patterns_button.clicked.connect(self.analyze_interaction_patterns)
         buttons_layout.addWidget(self.analyze_patterns_button)
         
-        self.full_scan_button = QPushButton("🛡️ Full Stalkerware Scan")
+        self.full_scan_button = QPushButton("Full Stalkerware Scan")
         self.full_scan_button.setStyleSheet("""
             QPushButton {
                 background-color: #F44336;

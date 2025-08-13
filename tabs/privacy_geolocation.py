@@ -180,7 +180,7 @@ class PrivacyGeolocationTab(QWidget):
             self.recommendations_display.clear()
 
             self.geo_results.append("📍 Analyzing geolocation data and location-based privacy risks...")
-            self.geo_results.append("🔍 Checking profile data, video metadata, and content for location indicators...")
+            self.geo_results.append("Checking profile data, video metadata, and content for location indicators...")
 
             headers = {
                 'Authorization': f'Bearer {access_token}',
@@ -272,7 +272,7 @@ class PrivacyGeolocationTab(QWidget):
                 self.geo_results.append(f"Analyzed {len(all_videos)} videos for location data")
 
             else:
-                self.geo_results.append(f"❌ Error fetching user data: {user_response.status_code}")
+                self.geo_results.append(f"Error fetching user data: {user_response.status_code}")
                 return
 
             # Generate location analysis results
@@ -337,7 +337,7 @@ class PrivacyGeolocationTab(QWidget):
 
         except Exception as e:
             logger.error("PRIVACY_GEO", "Error during geolocation analysis", e)
-            self.geo_results.append(f"❌ Error during geolocation analysis: {e}")
+            self.geo_results.append(f"Error during geolocation analysis: {e}")
         finally:
             # Hide loading spinner and re-enable button
             self.loading_spinner.hide_loading()
