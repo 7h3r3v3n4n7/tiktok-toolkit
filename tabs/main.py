@@ -28,7 +28,7 @@ class AuthTab(QWidget):
         super().__init__(parent)
         self.parent = parent
         self.auth_server = None
-        self.client_key = "sbawqk6aeul7ds655k"  # Your TikTok app client key
+        self.client_key = os.getenv("CLIENT_KEY", "sbawqk6aeul7ds655k")  # Load from environment
         self.redirect_uri = "http://localhost:8080/callback/"
         self.access_token = None
         self.refresh_token = None
@@ -202,9 +202,9 @@ class AuthTab(QWidget):
         self.status_label.setText("🔄 Exchanging code for tokens...")
         clean_code = auth_code.split('*')[0] if '*' in auth_code else auth_code
 
-        client_secret = os.getenv("TIKTOK_CLIENT_SECRET") or "<PUT_YOUR_CLIENT_SECRET_HERE>"
+        client_secret = os.getenv("CLIENT_SECRET") or "<PUT_YOUR_CLIENT_SECRET_HERE>"
         if not client_secret or client_secret == "<PUT_YOUR_CLIENT_SECRET_HERE>":
-            raise RuntimeError("Missing TIKTOK_CLIENT_SECRET")
+            raise RuntimeError("Missing CLIENT_SECRET")
 
         token_data = {
             'client_key': self.client_key,
@@ -260,9 +260,9 @@ class AuthTab(QWidget):
             QMessageBox.warning(self, "No Refresh Token", "No refresh token available. Please authenticate first.")
             return
 
-        client_secret = os.getenv("TIKTOK_CLIENT_SECRET") or "<PUT_YOUR_CLIENT_SECRET_HERE>"
+        client_secret = os.getenv("CLIENT_SECRET") or "<PUT_YOUR_CLIENT_SECRET_HERE>"
         if not client_secret or client_secret == "<PUT_YOUR_CLIENT_SECRET_HERE>":
-            QMessageBox.warning(self, "No Client Secret", "Set TIKTOK_CLIENT_SECRET in your environment.")
+            QMessageBox.warning(self, "No Client Secret", "Set CLIENT_SECRET in your environment.")
             return
 
         self.status_label.setText("🔄 Refreshing access token...")

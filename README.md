@@ -101,15 +101,12 @@ Create a `.env` file with your TikTok API credentials:
 
 ```env
 # TikTok API Credentials (REQUIRED)
-TIKTOK_CLIENT_KEY=your_client_key_here
-TIKTOK_CLIENT_SECRET=your_client_secret_here  # REQUIRED for OAuth flow
-TIKTOK_REDIRECT_URI=http://localhost:8080/callback/
-
-# Optional: Debug logging
+CLIENT_KEY=your_client_key_here
+CLIENT_SECRET=your_client_secret_here  # REQUIRED for OAuth flow
 DEBUG=True
 ```
 
-**⚠️ IMPORTANT:** The `TIKTOK_CLIENT_SECRET` is **REQUIRED** for the OAuth flow to work properly. TikTok's API requires the client secret even for desktop/PKCE applications.
+**⚠️ IMPORTANT:** The `CLIENT_SECRET` is **REQUIRED** for the OAuth flow to work properly. TikTok's API requires the client secret even for desktop/PKCE applications.
 
 ## 🖥️ Application Interface
 
@@ -202,7 +199,7 @@ DEBUG=True
    - Check your app configuration in TikTok Developer Portal
    - Verify your redirect URI is correct
    - Ensure your app is approved by TikTok
-   - **NEW:** Make sure `TIKTOK_CLIENT_SECRET` is set in your `.env` file
+   - **NEW:** Make sure `CLIENT_SECRET` is set in your `.env` file
    - **NEW:** Check for "invalid_request" errors - these often indicate PKCE or client_secret issues
 
 5. **"Code verifier or code challenge is invalid"**
