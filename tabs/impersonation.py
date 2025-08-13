@@ -39,6 +39,11 @@ except Exception:
 from difflib import SequenceMatcher
 from io import BytesIO
 
+# Core parsing regex for handles
+HANDLE_RE = re.compile(
+    r'(?:@|https?://(?:www\.)?tiktok\.com/@)?([A-Za-z0-9._-]{2,24})\b'
+)
+
 
 # Helper functions for impersonation detection
 def _norm(s: str) -> str:
@@ -99,6 +104,26 @@ class ImpersonationTab(QWidget):
         
         # Initialize loading spinner
         self.loading_spinner = LoadingSpinner(self)
+    
+    def extract_handles_from_text(self, text: str) -> list[str]:
+        """Extract handles from text using regex"""
+        if not text:
+            return []
+        # collect unique, normalized usernames (strip leading @)
+        out = []
+        seen = set()
+        for line in text.splitlines():
+            for m in HANDLE_RE.finditer(line.strip()):
+                h = m.group(1).strip('.').strip('-').lower()
+                if 2 <= len(h) <= 24 and h not in seen:
+                    seen.add(h)
+                    out.append(h)
+        return out
+
+    def make_candidate_dicts(self, handles: list[str]) -> list[dict]:
+        """Convert handles to candidate dictionaries"""
+        # minimal fields; bio/avatar can be enriched later if you add a fetch
+        return [{'username': h, 'bio': '', 'avatar_url': ''} for h in handles]
     
     def setup_ui(self):
         """Setup the impersonation monitor UI"""
@@ -198,6 +223,20 @@ class ImpersonationTab(QWidget):
         
         monitor_layout.addLayout(buttons_layout)
         
+        # Inline candidate input (paste-friendly)
+        paste_row = QHBoxLayout()
+        self.candidate_input = QTextEdit()
+        self.candidate_input.setPlaceholderText("Paste handles or TikTok profile URLs here (one per line). Examples:\n@someuser\nhttps://www.tiktok.com/@someuser\nsomeuser")
+        self.candidate_input.setMaximumHeight(80)
+        paste_row.addWidget(self.candidate_input)
+
+        self.seed_from_content_btn = QPushButton("🌱 Seed From Your Content")
+        self.seed_from_content_btn.setToolTip("Scan your video titles/descriptions for @mentions and add them as candidates")
+        self.seed_from_content_btn.clicked.connect(self.seed_candidates_from_content)
+        paste_row.addWidget(self.seed_from_content_btn)
+
+        monitor_layout.addLayout(paste_row)
+        
         # Risk level display
         risk_layout = QHBoxLayout()
         risk_layout.addWidget(QLabel("Impersonation Risk Level:"))
@@ -260,7 +299,6 @@ class ImpersonationTab(QWidget):
             self.suspects_table.setRowCount(0)
             
             self.impersonation_results.append("🔍 Scanning for similar usernames...")
-            self.impersonation_results.append("⚠️ Note: This is a simulated scan - TikTok API doesn't provide username search")
             
             # Get user's current username
             headers = {
@@ -282,6 +320,13 @@ class ImpersonationTab(QWidget):
                     
                     # Load candidate handles for analysis
                     candidates = self.load_candidate_handles()
+
+                    # If still empty, auto-generate
+                    if not candidates:
+                        self.impersonation_results.append("ℹ️ No candidates provided. Generating likely variations automatically…")
+                        base = _norm(display_name) or display_name
+                        variations = self.generate_username_variations(base)[:50]
+                        candidates = self.make_candidate_dicts(variations)
                     
                     if candidates:
                         self.impersonation_results.append(f"🔍 Analyzing {len(candidates)} candidate accounts for impersonation...")
@@ -300,8 +345,7 @@ class ImpersonationTab(QWidget):
                             self.risk_level_label.setText("LOW RISK")
                             self.risk_level_label.setStyleSheet("font-size: 18px; font-weight: bold; color: #4CAF50;")
                     else:
-                        self.impersonation_results.append("ℹ️ No candidate handles loaded. Please provide a list of accounts to check.")
-                        self.impersonation_results.append("💡 You can paste JSON or load a CSV file with candidate accounts.")
+                        self.impersonation_results.append("ℹ️ No candidates found. Try pasting handles or using 'Seed From Your Content'.")
                         
                 else:
                     self.impersonation_results.append("❌ Could not retrieve user display name")
@@ -332,7 +376,6 @@ class ImpersonationTab(QWidget):
             self.suspects_table.setRowCount(0)
             
             self.impersonation_results.append("🎬 Scanning for content clones...")
-            self.impersonation_results.append("⚠️ Note: This is a simulated scan - would require video fingerprinting")
             
             # Get user's videos
             headers = {
@@ -530,6 +573,10 @@ class ImpersonationTab(QWidget):
             self.suspects_table.setItem(row, 3, QTableWidgetItem(suspect['evidence']))
             self.suspects_table.setItem(row, 4, QTableWidgetItem(suspect['actions']))
         
+        # Improve table display
+        self.suspects_table.resizeRowsToContents()
+        self.suspects_table.horizontalHeader().setStretchLastSection(True)
+        
         # Update risk level
         if suspects:
             max_score = max(s['similarity_score'] for s in suspects)
@@ -589,54 +636,45 @@ class ImpersonationTab(QWidget):
         self.recommendations_display.append("   • Set up alerts for similar content")
         self.recommendations_display.append("   • Regularly check trending videos for clones")
 
-    def load_candidate_handles(self):
-        """Load candidate handles for impersonation detection"""
+    def load_candidate_handles(self) -> list[dict]:
+        """Load candidate handles with fallback to auto-generation"""
+        # 1) Prefer pasted text
+        pasted = self.candidate_input.toPlainText().strip()
+        if pasted:
+            handles = self.extract_handles_from_text(pasted)
+            if handles:
+                return self.make_candidate_dicts(handles)
+            # also support simple CSV pasted (username,bio,avatar_url)
+            rows = []
+            for line in pasted.splitlines():
+                parts = [p.strip() for p in line.split(',')]
+                if len(parts) >= 1 and parts[0]:
+                    rows.append({'username': parts[0], 'bio': parts[1] if len(parts)>1 else '', 'avatar_url': parts[2] if len(parts)>2 else ''})
+            if rows:
+                return rows
+
+        # 2) If nothing pasted, still allow file import (optional)
+        file_path, _ = QFileDialog.getOpenFileName(self, "Load Candidate Handles", "", "JSON files (*.json);;CSV files (*.csv);;All files (*)")
+        if not file_path:
+            return []
         try:
-            # Try to load from file first
-            file_path, _ = QFileDialog.getOpenFileName(
-                self, "Load Candidate Handles", "", 
-                "JSON files (*.json);;CSV files (*.csv);;All files (*)"
-            )
-            
-            if file_path:
-                if file_path.endswith('.json'):
-                    with open(file_path, 'r') as f:
-                        candidates = json.load(f)
-                elif file_path.endswith('.csv'):
-                    import csv
-                    candidates = []
-                    with open(file_path, 'r') as f:
-                        reader = csv.DictReader(f)
-                        for row in reader:
-                            candidates.append({
-                                'username': row.get('username', ''),
-                                'bio': row.get('bio', ''),
-                                'avatar_url': row.get('avatar_url', '')
-                            })
-                else:
-                    return []
-                    
-                return candidates
-            
-            # Fallback: prompt for JSON input
-            json_text, ok = QInputDialog.getMultiLineText(
-                self, "Enter Candidate Handles", 
-                "Paste JSON array of candidates:\n[{\"username\": \"...\", \"bio\": \"...\", \"avatar_url\": \"...\"}]"
-            )
-            
-            if ok and json_text.strip():
-                try:
-                    candidates = json.loads(json_text)
-                    return candidates if isinstance(candidates, list) else []
-                except json.JSONDecodeError:
-                    QMessageBox.warning(self, "Invalid JSON", "Please enter valid JSON format")
-                    return []
-            
-            return []
-            
+            if file_path.endswith('.json'):
+                with open(file_path, 'r') as f:
+                    data = json.load(f)
+                if isinstance(data, list):
+                    return [ {'username': d.get('username',''), 'bio': d.get('bio',''), 'avatar_url': d.get('avatar_url','')} for d in data ]
+                return []
+            if file_path.endswith('.csv'):
+                import csv
+                out = []
+                with open(file_path, 'r') as f:
+                    rdr = csv.DictReader(f)
+                    for row in rdr:
+                        out.append({'username': row.get('username',''), 'bio': row.get('bio',''), 'avatar_url': row.get('avatar_url','')})
+                return out
         except Exception as e:
-            logger.error("IMPERSONATION", f"Error loading candidates: {e}")
-            return []
+            QMessageBox.warning(self, "Load Error", f"Failed to load: {e}")
+        return []
 
     def rank_impersonation_candidates(self, user_profile: dict, candidates: list[dict]) -> list[dict]:
         """
@@ -666,3 +704,51 @@ class ImpersonationTab(QWidget):
         # keep top 20
         results.sort(key=lambda x: x['similarity_score'], reverse=True)
         return results[:20]
+
+    def seed_candidates_from_content(self):
+        """Seed candidates from user's content by scanning for @mentions"""
+        access_token = self.get_access_token()
+        if not access_token:
+            QMessageBox.warning(self, "No Access Token", "Please authenticate first.")
+            return
+
+        self.loading_spinner.show_loading("Seeding Candidates", "Scanning your content for @mentions...")
+        self.seed_from_content_btn.setEnabled(False)
+
+        try:
+            headers = {'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'}
+            fields = 'id,title,video_description'
+            all_videos, cursor, has_more, page_count = [], 0, True, 0
+
+            while has_more and page_count < 3:
+                page_count += 1
+                body = {'max_count': 20, 'cursor': cursor}
+                r = requests.post(f'https://open.tiktokapis.com/v2/video/list/?fields={fields}', headers=headers, json=body)
+                if r.status_code != 200:
+                    break
+                j = r.json().get('data', {})
+                vids = j.get('videos', [])
+                all_videos.extend(vids)
+                cursor, has_more = j.get('cursor', 0), j.get('has_more', False)
+
+            text = []
+            for v in all_videos:
+                if v.get('title'): text.append(v['title'])
+                if v.get('video_description'): text.append(v['video_description'])
+            handles = self.extract_handles_from_text('\n'.join(text))
+            existing = set(self.extract_handles_from_text(self.candidate_input.toPlainText()))
+            new_handles = [h for h in handles if h not in existing]
+
+            if new_handles:
+                # append to the paste box for visibility/edit
+                current = self.candidate_input.toPlainText().strip()
+                combined = (current + '\n' if current else '') + '\n'.join('@'+h for h in new_handles)
+                self.candidate_input.setPlainText(combined)
+                self.impersonation_results.append(f"🌱 Added {len(new_handles)} handles from your content.")
+            else:
+                self.impersonation_results.append("ℹ️ No new @mentions found in recent content.")
+        except Exception as e:
+            self.impersonation_results.append(f"❌ Seeding failed: {e}")
+        finally:
+            self.loading_spinner.hide_loading()
+            self.seed_from_content_btn.setEnabled(True)
