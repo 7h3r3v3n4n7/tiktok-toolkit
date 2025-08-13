@@ -157,13 +157,14 @@ class AuthTab(QWidget):
     
     def generate_pkce_pair(self):
         """Generate PKCE code verifier and challenge"""
-        # Generate code verifier (43-128 characters, A-Z, a-z, 0-9, -, ., _, ~)
-        allowed_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
-        self.code_verifier = ''.join(secrets.choice(allowed_chars) for _ in range(43))
-        
-        # Generate code challenge (SHA256 hash of verifier, hex encoded)
-        challenge_bytes = hashlib.sha256(self.code_verifier.encode('utf-8')).digest()
-        self.code_challenge = challenge_bytes.hex()
+        import secrets, hashlib, base64
+        allowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
+        # 64–96 chars is a good sweet spot; 43 is the spec minimum
+        self.code_verifier = ''.join(secrets.choice(allowed) for _ in range(64))
+
+        digest = hashlib.sha256(self.code_verifier.encode("utf-8")).digest()
+        # base64url without padding, per RFC 7636
+        self.code_challenge = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
     
     def handle_callback(self, callback_data):
         """Handle the OAuth callback"""
@@ -198,103 +199,109 @@ class AuthTab(QWidget):
         return True
     
     def exchange_code_for_tokens(self, auth_code):
-        """Exchange authorization code for access token"""
+        self.status_label.setText("🔄 Exchanging code for tokens...")
+        clean_code = auth_code.split('*')[0] if '*' in auth_code else auth_code
+
+        client_secret = os.getenv("TIKTOK_CLIENT_SECRET") or "<PUT_YOUR_CLIENT_SECRET_HERE>"
+        if not client_secret or client_secret == "<PUT_YOUR_CLIENT_SECRET_HERE>":
+            raise RuntimeError("Missing TIKTOK_CLIENT_SECRET")
+
+        token_data = {
+            'client_key': self.client_key,
+            'client_secret': client_secret,          # REQUIRED by TikTok
+            'code': clean_code,
+            'grant_type': 'authorization_code',
+            'redirect_uri': self.redirect_uri,
+            'code_verifier': self.code_verifier      # REQUIRED for desktop/PKCE
+        }
+
+        response = requests.post(
+            'https://open.tiktokapis.com/v2/oauth/token/',
+            data=token_data,
+            headers={'Content-Type': 'application/x-www-form-urlencoded'}
+        )
+
+        # TikTok returns 200 even on error; inspect JSON:
+        j = {}
         try:
-            self.status_label.setText("🔄 Exchanging code for tokens...")
-            
-            # Clean the authorization code (remove any suffixes)
-            clean_code = auth_code.split('*')[0] if '*' in auth_code else auth_code
-            
-            token_data = {
-                'client_key': self.client_key,
-                'client_secret': '',  # Not needed for PKCE flow
-                'code': clean_code,
-                'grant_type': 'authorization_code',
-                'redirect_uri': self.redirect_uri,
-                'code_verifier': self.code_verifier
-            }
-            
-            logger.debug("AUTH", f"Token exchange request data: {token_data}")
-            response = requests.post('https://open.tiktokapis.com/v2/oauth/token/', data=token_data)
-            logger.debug("AUTH", f"Token exchange response status: {response.status_code}")
-            
-            if response.status_code == 200:
-                token_info = response.json()
-                logger.debug("AUTH", f"Token response: {token_info}")
-                
-                self.access_token = token_info['access_token']
-                self.refresh_token = token_info['refresh_token']
-                self.token_expires_in = token_info.get('expires_in', 86400)
-                
-                logger.debug("AUTH", f"Access token: {self.access_token}")
-                
-                self.update_token_display()
-                self.save_tokens()
-                
-                self.status_label.setText("✅ Authentication successful!")
-                self.progress_bar.setVisible(False)
-                
-                # Update parent's access token
-                if self.parent:
-                    self.parent.access_token = self.access_token
-                    self.parent.refresh_token = self.refresh_token
-                
-            else:
-                error_msg = f"Token exchange failed: {response.status_code} - {response.text}"
-                logger.error("AUTH", f"Token exchange failed: {response.status_code}", Exception(error_msg))
-                self.status_label.setText(f"❌ {error_msg}")
-                self.progress_bar.setVisible(False)
-                
-        except Exception as e:
-            error_msg = f"Token exchange error: {e}"
-            logger.error("AUTH", "Token exchange error", e)
-            self.status_label.setText(f"❌ {error_msg}")
+            j = response.json()
+        except Exception:
+            pass
+
+        if 'error' in j:
+            msg = f"Token exchange failed ({response.status_code}): {j.get('error')} - {j.get('error_description')} log_id={j.get('log_id')}"
+            logger.error("AUTH", msg, Exception(msg))
+            self.status_label.setText(f"❌ {msg}")
             self.progress_bar.setVisible(False)
+            return
+
+        if response.status_code != 200 or 'access_token' not in j:
+            msg = f"Token exchange unexpected response ({response.status_code}): {response.text[:300]}"
+            logger.error("AUTH", msg, Exception(msg))
+            self.status_label.setText(f"❌ {msg}")
+            self.progress_bar.setVisible(False)
+            return
+
+        # success
+        self.access_token = j['access_token']
+        self.refresh_token = j.get('refresh_token')
+        self.token_expires_in = j.get('expires_in', 86400)
+        self.update_token_display()
+        self.save_tokens()
+        self.status_label.setText("✅ Authentication successful!")
+        self.progress_bar.setVisible(False)
+        if self.parent:
+            self.parent.access_token = self.access_token
+            self.parent.refresh_token = self.refresh_token
+
     
     def refresh_access_token(self):
-        """Refresh the access token using refresh token"""
         if not self.refresh_token:
             QMessageBox.warning(self, "No Refresh Token", "No refresh token available. Please authenticate first.")
             return
-        
+
+        client_secret = os.getenv("TIKTOK_CLIENT_SECRET") or "<PUT_YOUR_CLIENT_SECRET_HERE>"
+        if not client_secret or client_secret == "<PUT_YOUR_CLIENT_SECRET_HERE>":
+            QMessageBox.warning(self, "No Client Secret", "Set TIKTOK_CLIENT_SECRET in your environment.")
+            return
+
+        self.status_label.setText("🔄 Refreshing access token...")
+        refresh_data = {
+            'client_key': self.client_key,
+            'client_secret': client_secret,      # REQUIRED
+            'grant_type': 'refresh_token',
+            'refresh_token': self.refresh_token
+        }
+        response = requests.post(
+            'https://open.tiktokapis.com/v2/oauth/token/',
+            data=refresh_data,
+            headers={'Content-Type': 'application/x-www-form-urlencoded'}
+        )
+        j = {}
         try:
-            self.status_label.setText("🔄 Refreshing access token...")
-            print("🔄 Attempting token refresh...")
-            
-            refresh_data = {
-                'client_key': self.client_key,
-                'grant_type': 'refresh_token',
-                'refresh_token': self.refresh_token
-            }
-            
-            response = requests.post('https://open.tiktokapis.com/v2/oauth/token/', data=refresh_data)
-            
-            if response.status_code == 200:
-                token_info = response.json()
-                
-                self.access_token = token_info['access_token']
-                self.refresh_token = token_info.get('refresh_token', self.refresh_token)
-                self.token_expires_in = token_info.get('expires_in', 86400)
-                
-                self.update_token_display()
-                self.save_tokens()
-                
-                self.status_label.setText("✅ Token refreshed successfully!")
-                
-                # Update parent's access token
-                if self.parent:
-                    self.parent.access_token = self.access_token
-                    self.parent.refresh_token = self.refresh_token
-                
-            else:
-                error_msg = f"Token refresh failed: {response.status_code} - {response.text}"
-                self.status_label.setText(f"❌ {error_msg}")
-                print(f"❌ {error_msg}")
-                
-        except Exception as e:
-            error_msg = f"Token refresh error: {e}"
-            self.status_label.setText(f"❌ {error_msg}")
-            print(f"❌ {error_msg}")
+            j = response.json()
+        except Exception:
+            pass
+
+        if 'error' in j:
+            msg = f"Token refresh failed ({response.status_code}): {j.get('error')} - {j.get('error_description')} log_id={j.get('log_id')}"
+            self.status_label.setText(f"❌ {msg}")
+            return
+
+        if response.status_code != 200 or 'access_token' not in j:
+            self.status_label.setText(f"❌ Token refresh unexpected response ({response.status_code}): {response.text[:300]}")
+            return
+
+        self.access_token = j['access_token']
+        self.refresh_token = j.get('refresh_token', self.refresh_token)
+        self.token_expires_in = j.get('expires_in', 86400)
+        self.update_token_display()
+        self.save_tokens()
+        self.status_label.setText("✅ Token refreshed successfully!")
+        if self.parent:
+            self.parent.access_token = self.access_token
+            self.parent.refresh_token = self.refresh_token
+
     
     def clear_tokens(self):
         """Clear saved tokens"""

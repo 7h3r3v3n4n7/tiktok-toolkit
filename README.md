@@ -100,14 +100,16 @@ python main.py
 Create a `.env` file with your TikTok API credentials:
 
 ```env
-# TikTok API Credentials
+# TikTok API Credentials (REQUIRED)
 TIKTOK_CLIENT_KEY=your_client_key_here
-TIKTOK_CLIENT_SECRET=your_client_secret_here
+TIKTOK_CLIENT_SECRET=your_client_secret_here  # REQUIRED for OAuth flow
 TIKTOK_REDIRECT_URI=http://localhost:8080/callback/
 
 # Optional: Debug logging
 DEBUG=True
 ```
+
+**⚠️ IMPORTANT:** The `TIKTOK_CLIENT_SECRET` is **REQUIRED** for the OAuth flow to work properly. TikTok's API requires the client secret even for desktop/PKCE applications.
 
 ## 🖥️ Application Interface
 
@@ -200,6 +202,17 @@ DEBUG=True
    - Check your app configuration in TikTok Developer Portal
    - Verify your redirect URI is correct
    - Ensure your app is approved by TikTok
+   - **NEW:** Make sure `TIKTOK_CLIENT_SECRET` is set in your `.env` file
+   - **NEW:** Check for "invalid_request" errors - these often indicate PKCE or client_secret issues
+
+5. **"Code verifier or code challenge is invalid"**
+   - This indicates a PKCE implementation issue (now fixed)
+   - Ensure you're using the latest version of the application
+   - Clear saved tokens and re-authenticate
+
+6. **"Scope not authorized"**
+   - Verify your app has the required scopes: `user.info.basic,user.info.profile,user.info.stats,video.list`
+   - Check your app's permissions in the TikTok Developer Portal
 
 ### **Debug Mode**
 

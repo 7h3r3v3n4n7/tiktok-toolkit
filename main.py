@@ -13,6 +13,7 @@ import sys
 import os
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QGuiApplication
 from logger import logger
 
 # Add the current directory to the Python path
@@ -34,9 +35,8 @@ def main():
     app.setApplicationVersion("1.0.0")
     app.setOrganizationName("TikTok Toolkit")
     
-    # Enable high DPI scaling
-    app.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-    app.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+    # Configure high DPI scaling properly for Qt6
+    QGuiApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     
     # Create and show the main window
     logger.debug("MAIN", "Creating main application window")
