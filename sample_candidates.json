@@ -1,0 +1,52 @@
+[
+  {
+    "username": "testuser1",
+    "bio": "Content creator and digital artist",
+    "avatar_url": ""
+  },
+  {
+    "username": "testuser2",
+    "bio": "Digital content creator",
+    "avatar_url": ""
+  },
+  {
+    "username": "testuser3",
+    "bio": "Creator and artist",
+    "avatar_url": ""
+  },
+  {
+    "username": "testuser_1",
+    "bio": "Content creator and digital artist",
+    "avatar_url": ""
+  },
+  {
+    "username": "testuser_official",
+    "bio": "Official content creator and digital artist",
+    "avatar_url": ""
+  },
+  {
+    "username": "real_testuser",
+    "bio": "Content creator and digital artist",
+    "avatar_url": ""
+  },
+  {
+    "username": "testuser_verified",
+    "bio": "Content creator and digital artist",
+    "avatar_url": ""
+  },
+  {
+    "username": "testuser_backup",
+    "bio": "Content creator and digital artist",
+    "avatar_url": ""
+  },
+  {
+    "username": "testuser_fan",
+    "bio": "Content creator and digital artist",
+    "avatar_url": ""
+  },
+  {
+    "username": "testuser_fanpage",
+    "bio": "Content creator and digital artist",
+    "avatar_url": ""
+  }
+]
